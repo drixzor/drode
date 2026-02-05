@@ -1,6 +1,6 @@
 <div align="center">
 
-# Drode
+<img src="drode-logo.svg" alt="Drode" width="300" />
 
 ### The Desktop IDE for Claude Code
 
