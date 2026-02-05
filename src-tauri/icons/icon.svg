@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      .bg { fill: #1a1a1a; }
+      .icon { fill: #cf6949; }
+    </style>
+  </defs>
+  <!-- Background -->
+  <rect class="bg" width="512" height="512" rx="64"/>
+  <!-- Angle brackets icon scaled and centered -->
+  <g transform="translate(76, 140) scale(0.96)">
+    <!-- Right bracket > -->
+    <path class="icon" d="M201.61,230.4v-51.84l94.06-62.88c-30.7-21.99-63-41.82-94.06-63.36V.96l172.78,114.72-172.78,114.72Z"/>
+    <!-- Left bracket < -->
+    <polygon class="icon" points="172.81 52.32 78.72 114.73 81.29 117.92 172.81 179.04 172.81 230.4 0 114.73 172.81 0 172.81 52.32"/>
+  </g>
+</svg>
