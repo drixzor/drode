@@ -6,30 +6,21 @@ import {
   VscSourceControl,
   VscLayout
 } from 'react-icons/vsc'
+import { useLayoutStore } from '../../stores/layoutStore'
+import { useConversationStore } from '../../stores/conversationStore'
+import { useProjectStore } from '../../stores/projectStore'
 
-interface StatusBarProps {
-  isLeftPanelCollapsed: boolean
-  isRightPanelCollapsed: boolean
-  isBottomPanelCollapsed: boolean
-  onToggleLeftPanel: () => void
-  onToggleRightPanel: () => void
-  onToggleBottomPanel: () => void
-  claudeStatus: 'running' | 'stopped' | 'error' | 'starting'
-  projectPath: string | null
-  onResetLayout: () => void
-}
+export const StatusBar = memo(function StatusBar() {
+  const isLeftPanelCollapsed = useLayoutStore((s) => s.isLeftPanelCollapsed)
+  const isRightPanelCollapsed = useLayoutStore((s) => s.isRightPanelCollapsed)
+  const isBottomPanelCollapsed = useLayoutStore((s) => s.isBottomPanelCollapsed)
+  const toggleLeftPanel = useLayoutStore((s) => s.toggleLeftPanel)
+  const toggleRightPanel = useLayoutStore((s) => s.toggleRightPanel)
+  const toggleBottomPanel = useLayoutStore((s) => s.toggleBottomPanel)
+  const resetLayout = useLayoutStore((s) => s.resetLayout)
+  const claudeStatus = useConversationStore((s) => s.status)
+  const projectPath = useProjectStore((s) => s.currentProject)
 
-export const StatusBar = memo(function StatusBar({
-  isLeftPanelCollapsed,
-  isRightPanelCollapsed,
-  isBottomPanelCollapsed,
-  onToggleLeftPanel,
-  onToggleRightPanel,
-  onToggleBottomPanel,
-  claudeStatus,
-  projectPath,
-  onResetLayout
-}: StatusBarProps) {
   const getProjectName = (path: string | null) => {
     if (!path) return 'No project'
     const parts = path.split('/')
@@ -61,7 +52,7 @@ export const StatusBar = memo(function StatusBar({
       {/* Right side - Panel toggles */}
       <div className="flex items-center gap-1">
         <button
-          onClick={onResetLayout}
+          onClick={resetLayout}
           className="p-1 hover:bg-claude-surface-hover rounded transition-colors"
           title="Reset layout"
         >
@@ -71,7 +62,7 @@ export const StatusBar = memo(function StatusBar({
         <div className="w-px h-4 bg-claude-border mx-1" />
 
         <button
-          onClick={onToggleLeftPanel}
+          onClick={toggleLeftPanel}
           className={`p-1 rounded transition-colors ${
             isLeftPanelCollapsed
               ? 'text-claude-text-secondary hover:bg-claude-surface-hover'
@@ -83,7 +74,7 @@ export const StatusBar = memo(function StatusBar({
         </button>
 
         <button
-          onClick={onToggleBottomPanel}
+          onClick={toggleBottomPanel}
           className={`p-1 rounded transition-colors ${
             isBottomPanelCollapsed
               ? 'text-claude-text-secondary hover:bg-claude-surface-hover'
@@ -95,7 +86,7 @@ export const StatusBar = memo(function StatusBar({
         </button>
 
         <button
-          onClick={onToggleRightPanel}
+          onClick={toggleRightPanel}
           className={`p-1 rounded transition-colors ${
             isRightPanelCollapsed
               ? 'text-claude-text-secondary hover:bg-claude-surface-hover'

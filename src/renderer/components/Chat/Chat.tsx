@@ -1,28 +1,17 @@
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { VscSend, VscClearAll, VscTerminal, VscAdd } from 'react-icons/vsc'
-import { ConversationMessage } from '../../types'
 import { ChatMessage } from './ChatMessage'
 import { LoadingIndicator } from './LoadingIndicator'
+import { useConversationStore } from '../../stores/conversationStore'
 
-interface ChatProps {
-  messages: ConversationMessage[]
-  isLoading: boolean
-  status: 'running' | 'stopped' | 'error' | 'starting'
-  onSendMessage: (message: string) => void
-  onClearConversation: () => void
-  onNewConversation?: () => void
-  rawOutput: string
-}
-
-export const Chat = memo(function Chat({
-  messages,
-  isLoading,
-  status,
-  onSendMessage,
-  onClearConversation,
-  onNewConversation,
-  rawOutput
-}: ChatProps) {
+export const Chat = memo(function Chat() {
+  const messages = useConversationStore((s) => s.messages)
+  const isLoading = useConversationStore((s) => s.isLoading)
+  const status = useConversationStore((s) => s.status)
+  const rawOutput = useConversationStore((s) => s.rawOutput)
+  const sendMessage = useConversationStore((s) => s.sendMessage)
+  const clearConversation = useConversationStore((s) => s.clearConversation)
+  const newConversation = useConversationStore((s) => s.newConversation)
   const [input, setInput] = useState('')
   const [showRawOutput, setShowRawOutput] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -51,9 +40,9 @@ export const Chat = memo(function Chat({
     e?.preventDefault()
     if (!input.trim() || status !== 'running') return
 
-    onSendMessage(input)
+    sendMessage(input)
     setInput('')
-  }, [input, status, onSendMessage])
+  }, [input, status, sendMessage])
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -90,18 +79,16 @@ export const Chat = memo(function Chat({
           >
             Raw Output
           </button>
-          {onNewConversation && (
-            <button
-              className="p-1.5 hover:bg-claude-surface-hover rounded transition-colors"
-              onClick={onNewConversation}
-              title="New conversation"
-            >
-              <VscAdd className="text-claude-accent" />
-            </button>
-          )}
           <button
             className="p-1.5 hover:bg-claude-surface-hover rounded transition-colors"
-            onClick={onClearConversation}
+            onClick={newConversation}
+            title="New conversation"
+          >
+            <VscAdd className="text-claude-accent" />
+          </button>
+          <button
+            className="p-1.5 hover:bg-claude-surface-hover rounded transition-colors"
+            onClick={clearConversation}
             title="Clear conversation"
           >
             <VscClearAll className="text-claude-text-secondary" />

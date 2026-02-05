@@ -67,6 +67,20 @@ Every panel (file explorer, chat, editor, terminal) is resizable. Double-click a
 
 ---
 
+## ⚠️ Security Notice
+
+**By default, Drode runs in Safe Mode** where Claude Code's tool executions require approval through the CLI's built-in permission system.
+
+You can optionally enable **Dangerous Mode** (via the shield icon in the top bar) which uses `--dangerously-skip-permissions` to auto-approve all tool executions. This is faster but means Claude can:
+- Read any file in your project
+- Write/modify any file without confirmation  
+- Execute arbitrary shell commands
+- Make network requests
+
+**Only enable Dangerous Mode if you understand the risks and trust the prompts you're sending.** For untrusted projects or experimental prompts, keep Safe Mode enabled.
+
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -119,13 +133,13 @@ drode/
 │       │   ├── StatusBar/        # Bottom status indicators
 │       │   ├── Permissions/      # Tool approval dialogs
 │       │   └── ResizablePanel/   # Panel layout system
-│       ├── hooks/                # State management
-│       │   ├── useConversation   # Conversation state & persistence
-│       │   ├── useProject        # Project switching & recents
-│       │   ├── useFileSystem     # File tree, caching, watching
-│       │   ├── useEditorTabs     # Multi-tab editor state
-│       │   ├── useLayout         # Panel sizes & collapse state
-│       │   └── usePermissions    # Tool permission queue
+│       ├── stores/               # Zustand state management
+│       │   ├── layoutStore       # Panel widths & collapse state (persisted)
+│       │   ├── editorStore       # Tab CRUD, reordering, active tab
+│       │   ├── projectStore      # Project selection & recent projects
+│       │   ├── fileSystemStore   # File ops, directory/file caching
+│       │   ├── permissionStore   # Tool permission queue & session approve
+│       │   └── conversationStore # Messages, conversation CRUD
 │       ├── services/
 │       │   ├── claudeCodeBridge  # Claude CLI stream parser
 │       │   └── tauri-api         # Frontend-to-backend IPC
@@ -133,8 +147,21 @@ drode/
 │
 ├── src-tauri/                    # Backend (Rust + Tauri 2)
 │   └── src/
-│       └── lib.rs                # IPC handlers, file ops, CLI bridge,
-│                                 # terminal management, port scanning
+│       ├── commands/             # IPC command handlers
+│       │   ├── projects          # Project management
+│       │   ├── files             # File system operations
+│       │   ├── claude            # Claude CLI bridge
+│       │   ├── conversations     # Conversation & message CRUD
+│       │   ├── terminal          # Terminal process management
+│       │   └── ports             # Port scanning & management
+│       ├── db/                   # SQLite persistence layer
+│       │   ├── schema            # DDL, FTS5, migrations
+│       │   ├── settings          # Key-value settings storage
+│       │   ├── projects          # Recent projects CRUD
+│       │   ├── conversations     # Conversation + message storage
+│       │   └── search            # FTS5 full-text search (roadmap)
+│       ├── state.rs              # AppState with SQLite connection
+│       └── lib.rs                # App setup & invoke handler registration
 ├── tailwind.config.js            # Custom dark theme (Claude-inspired)
 └── vite.config.ts                # Vite + React + path aliases
 ```
@@ -173,9 +200,9 @@ drode/
                     └─────────┘
 ```
 
-**Frontend** (React/TypeScript): Renders the UI, manages state through custom hooks, and communicates with the backend via Tauri's IPC invoke system.
+**Frontend** (React/TypeScript): Renders the UI, manages state through Zustand stores (zero-prop components), and communicates with the backend via Tauri's IPC invoke system.
 
-**Backend** (Rust): Handles file system operations, spawns and streams output from the Claude CLI, manages terminal processes, and persists configuration.
+**Backend** (Rust): Modular command handlers for file system operations, Claude CLI streaming, terminal process management, and SQLite-backed persistence with WAL mode for crash safety.
 
 **Claude CLI Bridge**: The app spawns `claude --print --output-format stream-json` per message. Output is streamed line-by-line through Tauri events, parsed for text content, tool executions, and metadata, then assembled into conversation messages.
 
@@ -187,30 +214,35 @@ drode/
 |---|---|---|
 | Desktop Runtime | [Tauri 2](https://v2.tauri.app) | Native window, system access, small binary |
 | Frontend | [React 18](https://react.dev) | Component-based UI |
+| State | [Zustand](https://github.com/pmndrs/zustand) | Zero-dependency state management with persistence |
 | Language | [TypeScript](https://typescriptlang.org) (strict) | Type safety across the entire frontend |
 | Build | [Vite 5](https://vitejs.dev) | Fast HMR and optimized builds |
 | Styling | [Tailwind CSS](https://tailwindcss.com) | Utility-first CSS with custom dark theme |
 | Editor | [Monaco Editor](https://microsoft.github.io/monaco-editor/) | VS Code-grade editing |
 | Backend | [Rust](https://rust-lang.org) | Safe, fast native operations |
+| Database | [SQLite](https://sqlite.org) (rusqlite) | WAL-mode persistence with FTS5 search |
 | CLI | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | AI-powered coding assistant |
 
 ---
 
 ## Configuration
 
-Drode stores its configuration in your OS app data directory:
+Drode stores its data in a SQLite database in your OS app data directory:
 
 | Platform | Path |
 |---|---|
-| macOS | `~/Library/Application Support/com.drode.app/` |
-| Linux | `~/.config/com.drode.app/` |
-| Windows | `%APPDATA%\com.drode.app\` |
+| macOS | `~/Library/Application Support/com.drode.app/drode.db` |
+| Linux | `~/.config/com.drode.app/drode.db` |
+| Windows | `%APPDATA%\com.drode.app\drode.db` |
 
 **Stored data:**
 - Recent projects (up to 10)
 - Active project path
 - Conversation history per project (multiple conversations)
-- Window dimensions
+- Full-text search index (FTS5) for messages
+- Window dimensions and layout preferences
+
+The database uses WAL mode for crash safety and foreign keys for cascade deletes. See [CHANGELOG.md](CHANGELOG.md) for implementation details.
 
 ---
 

@@ -126,6 +126,8 @@ declare global {
       sendToClaude: (message: string, sessionId?: string) => Promise<{ success: boolean; error?: string }>
       stopClaudeCli: () => Promise<{ success: boolean }>
       isClaudeRunning: () => Promise<boolean>
+      getDangerousMode: () => Promise<boolean>
+      setDangerousMode: (enabled: boolean) => Promise<{ success: boolean; error?: string }>
 
       // Tool permission
       respondToTool: (toolUseId: string, result: string, isError: boolean) => Promise<{ success: boolean; error?: string }>

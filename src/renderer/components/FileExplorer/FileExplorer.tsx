@@ -3,21 +3,12 @@ import { VscRefresh, VscNewFile, VscNewFolder, VscFolderOpened, VscFolder, VscCh
 import { FileEntry } from '../../types'
 import { FileIcon } from './FileIcon'
 import { ContextMenu } from './ContextMenu'
+import { useProjectStore } from '../../stores/projectStore'
+import { useFileSystemStore } from '../../stores/fileSystemStore'
+import { useEditorStore } from '../../stores/editorStore'
 
 interface FileExplorerProps {
-  projectPath: string | null
-  files: FileEntry[]
-  isLoading: boolean
-  selectedFile: string | null
   onFileSelect: (filePath: string) => void
-  onRefresh: () => void
-  loadSubdirectory: (dirPath: string) => Promise<FileEntry[]>
-  isFileChanged: (filePath: string) => boolean
-  onCreateFile: (filePath: string) => Promise<boolean>
-  onCreateDirectory: (dirPath: string) => Promise<boolean>
-  onDeleteFile: (filePath: string) => Promise<boolean>
-  onRenameFile: (oldPath: string, newPath: string) => Promise<boolean>
-  onPreloadFile?: (filePath: string) => void
 }
 
 interface TreeNode extends FileEntry {
@@ -27,20 +18,23 @@ interface TreeNode extends FileEntry {
 }
 
 export const FileExplorer = memo(function FileExplorer({
-  projectPath,
-  files,
-  isLoading,
-  selectedFile,
   onFileSelect,
-  onRefresh,
-  loadSubdirectory,
-  isFileChanged,
-  onCreateFile,
-  onCreateDirectory,
-  onDeleteFile,
-  onRenameFile,
-  onPreloadFile
 }: FileExplorerProps) {
+  const projectPath = useProjectStore((s) => s.currentProject)
+  const files = useFileSystemStore((s) => s.files)
+  const isLoading = useFileSystemStore((s) => s.isLoading)
+  const loadSubdirectory = useFileSystemStore((s) => s.loadSubdirectory)
+  const isFileChanged = useFileSystemStore((s) => s.isFileChanged)
+  const onCreateFile = useFileSystemStore((s) => s.createFile)
+  const onCreateDirectory = useFileSystemStore((s) => s.createDirectory)
+  const onDeleteFile = useFileSystemStore((s) => s.deleteFile)
+  const onRenameFile = useFileSystemStore((s) => s.renameFile)
+  const onPreloadFile = useFileSystemStore((s) => s.preloadFile)
+  const onRefresh = useFileSystemStore((s) => s.refresh)
+  const selectedFile = useEditorStore((s) => {
+    const activeTab = s.tabs.find((t) => t.id === s.activeTabId)
+    return activeTab?.filePath ?? null
+  })
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set())
   const [dirContents, setDirContents] = useState<Map<string, FileEntry[]>>(new Map())
   const [loadingDirs, setLoadingDirs] = useState<Set<string>>(new Set())
@@ -146,7 +140,7 @@ export const FileExplorer = memo(function FileExplorer({
           onContextMenu={(e) => handleContextMenu(e, entry)}
           onMouseEnter={() => {
             // Preload file on hover for faster opening
-            if (!entry.isDirectory && onPreloadFile) {
+            if (!entry.isDirectory) {
               onPreloadFile(entry.path)
             }
           }}

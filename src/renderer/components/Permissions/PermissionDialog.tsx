@@ -12,14 +12,7 @@ import {
 import { PermissionRequest } from '../../types'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
-
-interface PermissionDialogProps {
-  request: PermissionRequest | null
-  onApprove: () => void
-  onDeny: () => void
-  onAcceptAll?: () => void
-  queueLength?: number
-}
+import { usePermissionStore } from '../../stores/permissionStore'
 
 function getToolIcon(toolName: string) {
   switch (toolName) {
@@ -205,7 +198,13 @@ function ToolPreview({ toolName, input }: { toolName: string; input: Record<stri
   }
 }
 
-export function PermissionDialog({ request, onApprove, onDeny, onAcceptAll, queueLength = 0 }: PermissionDialogProps) {
+export function PermissionDialog() {
+  const request = usePermissionStore((s) => s.pendingRequest)
+  const queueLength = usePermissionStore((s) => s.queueLength)
+  const approve = usePermissionStore((s) => s.approve)
+  const deny = usePermissionStore((s) => s.deny)
+  const acceptAll = usePermissionStore((s) => s.acceptAll)
+
   if (!request) return null
 
   return (
@@ -213,7 +212,7 @@ export function PermissionDialog({ request, onApprove, onDeny, onAcceptAll, queu
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onDeny}
+        onClick={deny}
       />
 
       {/* Dialog */}
@@ -250,26 +249,24 @@ export function PermissionDialog({ request, onApprove, onDeny, onAcceptAll, queu
         {/* Footer */}
         <div className="flex items-center justify-between gap-3 p-4 border-t border-claude-border/50 bg-claude-surface/30">
           <div>
-            {onAcceptAll && (
-              <button
-                onClick={onAcceptAll}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-claude-success bg-claude-success/10 hover:bg-claude-success/20 border border-claude-success/30 rounded-lg transition-colors"
-              >
-                <VscCheck />
-                Accept All
-              </button>
-            )}
+            <button
+              onClick={acceptAll}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-claude-success bg-claude-success/10 hover:bg-claude-success/20 border border-claude-success/30 rounded-lg transition-colors"
+            >
+              <VscCheck />
+              Accept All
+            </button>
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={onDeny}
+              onClick={deny}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-claude-text bg-claude-surface hover:bg-claude-surface-hover border border-claude-border rounded-lg transition-colors"
             >
               <VscClose />
               Deny
             </button>
             <button
-              onClick={onApprove}
+              onClick={() => approve(false)}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-claude-accent hover:bg-claude-accent-hover rounded-lg transition-colors"
             >
               <VscCheck />

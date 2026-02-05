@@ -1,31 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { VscFolderOpened, VscChevronDown, VscSettingsGear, VscClose, VscCircleFilled } from 'react-icons/vsc'
+import { VscFolderOpened, VscChevronDown, VscSettingsGear, VscClose, VscCircleFilled, VscShield } from 'react-icons/vsc'
+import DrodeLogo from '../../assets/drode-logo.svg'
+import { useProjectStore } from '../../stores/projectStore'
+import { useConversationStore } from '../../stores/conversationStore'
 
 interface TopBarProps {
-  currentProject: string | null
-  recentProjects: string[]
   onProjectChange: (projectPath: string) => void
   onOpenProject: () => void
-  onRemoveProject: (projectPath: string) => void
-  getProjectName: (projectPath: string) => string
-  claudeStatus: 'running' | 'stopped' | 'error' | 'starting'
-  onStartClaude: () => void
-  onStopClaude: () => void
 }
 
-export function TopBar({
-  currentProject,
-  recentProjects,
-  onProjectChange,
-  onOpenProject,
-  onRemoveProject,
-  getProjectName,
-  claudeStatus,
-  onStartClaude,
-  onStopClaude
-}: TopBarProps) {
+export function TopBar({ onProjectChange, onOpenProject }: TopBarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [dangerousMode, setDangerousMode] = useState(false)
+  const [showDangerousTooltip, setShowDangerousTooltip] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const currentProject = useProjectStore((s) => s.currentProject)
+  const recentProjects = useProjectStore((s) => s.recentProjects)
+  const getProjectName = useProjectStore((s) => s.getProjectName)
+  const removeRecentProject = useProjectStore((s) => s.removeRecentProject)
+  const claudeStatus = useConversationStore((s) => s.status)
+  const startClaude = useConversationStore((s) => s.startClaude)
+  const stopClaude = useConversationStore((s) => s.stopClaude)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -37,6 +33,19 @@ export function TopBar({
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // Load dangerous mode setting on mount
+  useEffect(() => {
+    window.electronAPI.getDangerousMode().then(setDangerousMode)
+  }, [])
+
+  const toggleDangerousMode = async () => {
+    const newValue = !dangerousMode
+    const result = await window.electronAPI.setDangerousMode(newValue)
+    if (result.success) {
+      setDangerousMode(newValue)
+    }
+  }
 
   const getStatusColor = () => {
     switch (claudeStatus) {
@@ -66,10 +75,9 @@ export function TopBar({
 
   return (
     <div className="h-12 bg-claude-surface border-b border-claude-border flex items-center px-4 drag-region">
-      {/* App Title */}
-      <div className="flex items-center gap-2 no-drag">
-        <span className="text-lg font-semibold text-claude-text">Drode</span>
-        <span className="text-xs text-claude-text-secondary">Claude Code GUI</span>
+      {/* App Logo */}
+      <div className="flex items-center no-drag">
+        <img src={DrodeLogo} alt="Drode" className="h-6" />
       </div>
 
       {/* Project Switcher */}
@@ -130,7 +138,7 @@ export function TopBar({
                       className="opacity-0 group-hover:opacity-100 p-1 hover:bg-claude-bg rounded transition-opacity"
                       onClick={(e) => {
                         e.stopPropagation()
-                        onRemoveProject(projectPath)
+                        removeRecentProject(projectPath)
                       }}
                     >
                       <VscClose className="text-claude-text-secondary" />
@@ -162,7 +170,7 @@ export function TopBar({
         {claudeStatus === 'stopped' || claudeStatus === 'error' ? (
           <button
             className="px-3 py-1 text-sm bg-claude-accent hover:bg-claude-accent-hover text-white rounded-lg transition-colors"
-            onClick={onStartClaude}
+            onClick={startClaude}
             disabled={!currentProject}
           >
             Connect
@@ -170,11 +178,43 @@ export function TopBar({
         ) : claudeStatus === 'running' ? (
           <button
             className="px-3 py-1 text-sm bg-claude-bg hover:bg-claude-surface-hover text-claude-text rounded-lg border border-claude-border transition-colors"
-            onClick={onStopClaude}
+            onClick={stopClaude}
           >
             Disconnect
           </button>
         ) : null}
+
+        {/* Dangerous Mode Toggle */}
+        <div className="relative">
+          <button
+            className={`p-2 rounded-lg transition-colors ${
+              dangerousMode
+                ? 'bg-claude-error/20 hover:bg-claude-error/30'
+                : 'hover:bg-claude-surface-hover'
+            }`}
+            onClick={toggleDangerousMode}
+            onMouseEnter={() => setShowDangerousTooltip(true)}
+            onMouseLeave={() => setShowDangerousTooltip(false)}
+            title={dangerousMode ? 'Dangerous Mode: ON (tools auto-execute)' : 'Safe Mode: ON (tools need approval)'}
+          >
+            <VscShield className={dangerousMode ? 'text-claude-error' : 'text-claude-success'} />
+          </button>
+          {showDangerousTooltip && (
+            <div className="absolute top-full right-0 mt-2 w-64 p-3 bg-claude-surface border border-claude-border rounded-lg shadow-xl z-50 text-xs">
+              <div className={`font-semibold mb-1 ${dangerousMode ? 'text-claude-error' : 'text-claude-success'}`}>
+                {dangerousMode ? 'Dangerous Mode' : 'Safe Mode'}
+              </div>
+              <div className="text-claude-text-secondary">
+                {dangerousMode
+                  ? 'Tools execute automatically without approval. Claude can read/write files and run commands freely.'
+                  : 'Claude Code will prompt for approval before executing tools. Recommended for untrusted projects.'}
+              </div>
+              <div className="mt-2 text-claude-text-secondary opacity-70">
+                Click to toggle
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Settings */}
         <button className="p-2 hover:bg-claude-surface-hover rounded-lg transition-colors">

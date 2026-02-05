@@ -10,56 +10,22 @@ import {
   VscChevronRight
 } from 'react-icons/vsc'
 import { ConversationSummary } from '../../types'
+import { useProjectStore } from '../../stores/projectStore'
+import { useConversationStore } from '../../stores/conversationStore'
 
-interface ConversationListProps {
-  projectPath: string | null
-  activeConversationId: string | null
-  onSelectConversation: (id: string) => void
-  onCreateConversation: () => void
-  onDeleteConversation: (id: string) => void
-  onRenameConversation: (id: string, newName: string) => void
-}
+export const ConversationList = memo(function ConversationList() {
+  const projectPath = useProjectStore((s) => s.currentProject)
+  const conversations = useConversationStore((s) => s.conversations)
+  const activeConversationId = useConversationStore((s) => s.activeConversationId)
+  const selectConversation = useConversationStore((s) => s.selectConversation)
+  const newConversation = useConversationStore((s) => s.newConversation)
+  const deleteConversation = useConversationStore((s) => s.deleteConversation)
+  const renameConversation = useConversationStore((s) => s.renameConversation)
 
-export const ConversationList = memo(function ConversationList({
-  projectPath,
-  activeConversationId,
-  onSelectConversation,
-  onCreateConversation,
-  onDeleteConversation,
-  onRenameConversation
-}: ConversationListProps) {
-  const [conversations, setConversations] = useState<ConversationSummary[]>([])
   const [isExpanded, setIsExpanded] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
-
-  // Load conversations when project changes
-  useEffect(() => {
-    if (!projectPath) {
-      setConversations([])
-      return
-    }
-
-    const loadConversations = async () => {
-      const list = await window.electronAPI.listConversations(projectPath)
-      setConversations(list.sort((a, b) => b.updatedAt - a.updatedAt))
-    }
-
-    loadConversations()
-  }, [projectPath])
-
-  // Refresh conversations periodically
-  useEffect(() => {
-    if (!projectPath) return
-
-    const interval = setInterval(async () => {
-      const list = await window.electronAPI.listConversations(projectPath)
-      setConversations(list.sort((a, b) => b.updatedAt - a.updatedAt))
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [projectPath])
 
   // Focus input when editing starts
   useEffect(() => {
@@ -77,7 +43,7 @@ export const ConversationList = memo(function ConversationList({
 
   const handleSaveRename = (id: string) => {
     if (editName.trim()) {
-      onRenameConversation(id, editName.trim())
+      renameConversation(id, editName.trim())
     }
     setEditingId(null)
     setEditName('')
@@ -135,7 +101,7 @@ export const ConversationList = memo(function ConversationList({
         <button
           onClick={(e) => {
             e.stopPropagation()
-            onCreateConversation()
+            newConversation()
           }}
           className="p-1 hover:bg-claude-surface rounded transition-colors"
           title="New conversation"
@@ -151,7 +117,7 @@ export const ConversationList = memo(function ConversationList({
             <div className="px-4 py-3 text-xs text-claude-text-secondary text-center">
               No conversations yet.
               <button
-                onClick={onCreateConversation}
+                onClick={newConversation}
                 className="block mx-auto mt-1 text-claude-accent hover:underline"
               >
                 Start a new conversation
@@ -161,7 +127,7 @@ export const ConversationList = memo(function ConversationList({
             conversations.map(conv => (
               <div
                 key={conv.id}
-                onClick={() => onSelectConversation(conv.id)}
+                onClick={() => selectConversation(conv.id)}
                 className={`group flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors ${
                   conv.id === activeConversationId
                     ? 'bg-claude-accent/10 border-l-2 border-claude-accent'
@@ -212,7 +178,7 @@ export const ConversationList = memo(function ConversationList({
                         onClick={(e) => {
                           e.stopPropagation()
                           if (confirm('Delete this conversation?')) {
-                            onDeleteConversation(conv.id)
+                            deleteConversation(conv.id)
                           }
                         }}
                         className="p-1 hover:bg-claude-surface rounded transition-colors"

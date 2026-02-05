@@ -175,6 +175,24 @@ async function isClaudeRunning(): Promise<boolean> {
   }
 }
 
+async function getDangerousMode(): Promise<boolean> {
+  try {
+    return await invoke('get_dangerous_mode')
+  } catch (e) {
+    console.error('getDangerousMode error:', e)
+    return false
+  }
+}
+
+async function setDangerousMode(enabled: boolean): Promise<OperationResult> {
+  try {
+    return await invoke('set_dangerous_mode', { enabled })
+  } catch (e) {
+    console.error('setDangerousMode error:', e)
+    return { success: false, error: String(e) }
+  }
+}
+
 async function respondToTool(toolUseId: string, result: string, isError: boolean): Promise<OperationResult> {
   try {
     return await invoke('respond_to_tool', { toolUseId, result, isError })
@@ -470,6 +488,8 @@ export const tauriAPI = {
   respondToTool,
   stopClaudeCli,
   isClaudeRunning,
+  getDangerousMode,
+  setDangerousMode,
   onClaudeOutput,
   onClaudeExit,
   onClaudeError,

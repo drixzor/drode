@@ -1,7 +1,7 @@
 import React, { useState, useRef, memo, useMemo, Suspense, lazy } from 'react'
 import { VscClose, VscFile, VscCircleFilled, VscEllipsis } from 'react-icons/vsc'
 import { getLanguageFromExtension, getFileExtension, getFilename } from '../../utils/fileUtils'
-import { EditorTab } from '../../hooks/useEditorTabs'
+import { useEditorStore } from '../../stores/editorStore'
 import { FileIcon } from '../FileExplorer/FileIcon'
 
 // Lazy load the syntax highlighter for better initial load
@@ -13,14 +13,6 @@ const SyntaxHighlighter = lazy(() =>
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 interface CodeEditorProps {
-  tabs: EditorTab[]
-  activeTab: EditorTab | null
-  activeTabId: string | null
-  onTabSelect: (tabId: string) => void
-  onTabClose: (tabId: string) => void
-  onCloseOtherTabs?: (tabId: string) => void
-  onCloseAllTabs?: () => void
-  onCloseTabsToRight?: (tabId: string) => void
   isLoading?: boolean
 }
 
@@ -90,16 +82,16 @@ const CodeContent = memo(function CodeContent({
 })
 
 export const CodeEditor = memo(function CodeEditor({
-  tabs,
-  activeTab,
-  activeTabId,
-  onTabSelect,
-  onTabClose,
-  onCloseOtherTabs,
-  onCloseAllTabs,
-  onCloseTabsToRight,
   isLoading = false
 }: CodeEditorProps) {
+  const tabs = useEditorStore((s) => s.tabs)
+  const activeTabId = useEditorStore((s) => s.activeTabId)
+  const activeTab = useEditorStore((s) => s.tabs.find((t) => t.id === s.activeTabId) ?? null)
+  const onTabSelect = useEditorStore((s) => s.setActiveTabId)
+  const onTabClose = useEditorStore((s) => s.closeTab)
+  const onCloseOtherTabs = useEditorStore((s) => s.closeOtherTabs)
+  const onCloseAllTabs = useEditorStore((s) => s.closeAllTabs)
+  const onCloseTabsToRight = useEditorStore((s) => s.closeTabsToRight)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabId: string } | null>(null)
   const [draggedTabId, setDraggedTabId] = useState<string | null>(null)
   const tabsContainerRef = useRef<HTMLDivElement>(null)
@@ -276,7 +268,7 @@ export const CodeEditor = memo(function CodeEditor({
             >
               Close
             </button>
-            {onCloseOtherTabs && tabs.length > 1 && (
+            {tabs.length > 1 && (
               <button
                 onClick={() => {
                   onCloseOtherTabs(contextMenu.tabId)
@@ -287,31 +279,25 @@ export const CodeEditor = memo(function CodeEditor({
                 Close Others
               </button>
             )}
-            {onCloseTabsToRight && (
-              <button
-                onClick={() => {
-                  onCloseTabsToRight(contextMenu.tabId)
-                  closeContextMenu()
-                }}
-                className="w-full px-3 py-1.5 text-sm text-left hover:bg-claude-surface-hover"
-              >
-                Close to the Right
-              </button>
-            )}
-            {onCloseAllTabs && (
-              <>
-                <div className="h-px bg-claude-border my-1" />
-                <button
-                  onClick={() => {
-                    onCloseAllTabs()
-                    closeContextMenu()
-                  }}
-                  className="w-full px-3 py-1.5 text-sm text-left hover:bg-claude-surface-hover text-claude-error"
-                >
-                  Close All
-                </button>
-              </>
-            )}
+            <button
+              onClick={() => {
+                onCloseTabsToRight(contextMenu.tabId)
+                closeContextMenu()
+              }}
+              className="w-full px-3 py-1.5 text-sm text-left hover:bg-claude-surface-hover"
+            >
+              Close to the Right
+            </button>
+            <div className="h-px bg-claude-border my-1" />
+            <button
+              onClick={() => {
+                onCloseAllTabs()
+                closeContextMenu()
+              }}
+              className="w-full px-3 py-1.5 text-sm text-left hover:bg-claude-surface-hover text-claude-error"
+            >
+              Close All
+            </button>
           </div>
         </>
       )}

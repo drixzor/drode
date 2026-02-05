@@ -31,6 +31,7 @@ dirs = "5"
 chrono = "0.4"
 trash = "4"
 uuid = { version = "1", features = ["v4"] }
+rusqlite = { version = "0.31", features = ["bundled", "backup"] }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
