@@ -2,6 +2,8 @@
 
 <img src="drode-logo.svg" alt="Drode" width="300" />
 
+**D**evelop. **R**un. **O**rchestrate. **D**ebug. **E**volve.
+
 ### The Desktop IDE for Claude Code
 
 **Chat with AI. Edit code. Build anything. All in one native app.**
