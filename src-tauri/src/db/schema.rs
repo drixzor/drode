@@ -88,5 +88,47 @@ pub fn initialize(conn: &Connection) -> Result<(), rusqlite::Error> {
         -- Record schema version
         INSERT OR IGNORE INTO schema_version (version) VALUES (1);
         ",
-    )
+    )?;
+
+    // Version 2 migration: activity_events + oauth_tokens
+    let version: i32 = conn.query_row(
+        "SELECT COALESCE(MAX(version), 0) FROM schema_version",
+        [],
+        |row| row.get(0),
+    )?;
+
+    if version < 2 {
+        conn.execute_batch(
+            "
+            CREATE TABLE IF NOT EXISTS activity_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_id TEXT NOT NULL UNIQUE,
+                project_path TEXT NOT NULL,
+                category TEXT NOT NULL,
+                event_type TEXT NOT NULL,
+                title TEXT NOT NULL,
+                detail_json TEXT,
+                severity TEXT NOT NULL DEFAULT 'info',
+                source_id TEXT,
+                created_at INTEGER NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_activity_project ON activity_events(project_path, created_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_activity_category ON activity_events(category, created_at DESC);
+
+            CREATE TABLE IF NOT EXISTS oauth_tokens (
+                provider TEXT PRIMARY KEY NOT NULL,
+                access_token TEXT NOT NULL,
+                refresh_token TEXT,
+                expires_at INTEGER,
+                scope TEXT,
+                account_info_json TEXT,
+                updated_at INTEGER NOT NULL
+            );
+
+            INSERT OR IGNORE INTO schema_version (version) VALUES (2);
+            ",
+        )?;
+    }
+
+    Ok(())
 }

@@ -67,6 +67,44 @@ pub fn run() {
             // Ports
             commands::ports::list_ports,
             commands::ports::kill_port,
+            // Activity Log
+            commands::activity::log_activity,
+            commands::activity::get_activity_log,
+            commands::activity::clear_activity_log,
+            // OAuth
+            commands::oauth::oauth_start,
+            commands::oauth::oauth_get_token,
+            commands::oauth::oauth_get_status,
+            commands::oauth::oauth_revoke,
+            // GitHub
+            commands::github::github_list_repos,
+            commands::github::github_get_repo_tree,
+            commands::github::github_read_file,
+            commands::github::github_update_file,
+            commands::github::github_list_branches,
+            commands::github::github_create_branch,
+            commands::github::github_list_pull_requests,
+            commands::github::github_create_pull_request,
+            // Supabase
+            commands::supabase::supabase_list_projects,
+            commands::supabase::supabase_list_tables,
+            commands::supabase::supabase_get_table_data,
+            commands::supabase::supabase_run_sql,
+            commands::supabase::supabase_insert_row,
+            commands::supabase::supabase_update_row,
+            commands::supabase::supabase_delete_row,
+            commands::supabase::supabase_run_migration,
+            // Vercel
+            commands::vercel::vercel_list_projects,
+            commands::vercel::vercel_list_deployments,
+            commands::vercel::vercel_get_deployment,
+            commands::vercel::vercel_get_deployment_logs,
+            commands::vercel::vercel_create_deployment,
+            commands::vercel::vercel_list_domains,
+            commands::vercel::vercel_add_domain,
+            commands::vercel::vercel_remove_domain,
+            commands::vercel::vercel_promote_deployment,
+            commands::vercel::vercel_rollback_deployment,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,11 +1,20 @@
 import { create } from 'zustand'
 
+export interface GitHubMeta {
+  owner: string
+  repo: string
+  branch: string
+  sha: string
+}
+
 export interface EditorTab {
   id: string
   filePath: string
   content: string
   isLoading: boolean
   isModified: boolean
+  source?: 'local' | 'github'
+  githubMeta?: GitHubMeta
 }
 
 interface EditorState {

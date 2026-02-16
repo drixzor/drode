@@ -9,12 +9,24 @@ import { BottomPanel, BottomPanelHandle } from './components/Terminal/BottomPane
 import { QuickActions } from './components/Terminal/QuickActions'
 import { ConversationList } from './components/ConversationList/ConversationList'
 import { StatusBar } from './components/StatusBar/StatusBar'
+import { GitHubExplorer } from './components/GitHub/GitHubExplorer'
+import { DatabasePanel } from './components/Database/DatabasePanel'
+import { DeploymentsPanel } from './components/Deployments/DeploymentsPanel'
 import { useProjectStore } from './stores/projectStore'
 import { useFileSystemStore } from './stores/fileSystemStore'
 import { useConversationStore } from './stores/conversationStore'
 import { usePermissionStore } from './stores/permissionStore'
 import { useLayoutStore, PANEL_CONSTRAINTS } from './stores/layoutStore'
 import { useEditorStore } from './stores/editorStore'
+import { useActivityStore } from './stores/activityStore'
+import { useAuthStore } from './stores/authStore'
+import {
+  VscComment,
+  VscDatabase,
+  VscRocket,
+  VscFiles,
+  VscGithub,
+} from 'react-icons/vsc'
 
 function App() {
   const [isFileLoading, setIsFileLoading] = useState(false)
@@ -32,10 +44,14 @@ function App() {
     const cleanupFs = useFileSystemStore.getState().init()
     const cleanupConv = useConversationStore.getState().init()
     const cleanupPerm = usePermissionStore.getState().init()
+    const cleanupActivity = useActivityStore.getState().init()
+    const cleanupAuth = useAuthStore.getState().init()
     return () => {
       cleanupFs()
       cleanupConv()
       cleanupPerm()
+      cleanupActivity()
+      cleanupAuth()
     }
   }, [])
 
@@ -175,6 +191,10 @@ function App() {
   const resetRightPanel = useLayoutStore((s) => s.resetRightPanel)
   const resetBottomPanel = useLayoutStore((s) => s.resetBottomPanel)
   const toggleBottomPanel = useLayoutStore((s) => s.toggleBottomPanel)
+  const centerView = useLayoutStore((s) => s.centerView)
+  const setCenterView = useLayoutStore((s) => s.setCenterView)
+  const leftPanelTab = useLayoutStore((s) => s.leftPanelTab)
+  const setLeftPanelTab = useLayoutStore((s) => s.setLeftPanelTab)
 
   if (isLoading) {
     return (
@@ -204,7 +224,7 @@ function App() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Left Panel - File Explorer + Conversations */}
+        {/* Left Panel - File Explorer / GitHub + Conversations */}
         <ResizablePanel
           size={leftPanelWidth}
           minSize={PANEL_CONSTRAINTS.left.min}
@@ -220,18 +240,87 @@ function App() {
             {/* Conversation List */}
             <ConversationList />
 
-            {/* File Explorer */}
+            {/* Left Panel Tab Switcher */}
+            <div className="flex items-center border-b border-claude-border px-1 py-0.5 bg-claude-surface flex-shrink-0">
+              <button
+                onClick={() => setLeftPanelTab('files')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-colors ${
+                  leftPanelTab === 'files'
+                    ? 'bg-claude-bg text-claude-text'
+                    : 'text-claude-text-secondary hover:text-claude-text hover:bg-claude-surface-hover'
+                }`}
+              >
+                <VscFiles className="w-3.5 h-3.5" />
+                Files
+              </button>
+              <button
+                onClick={() => setLeftPanelTab('github')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition-colors ${
+                  leftPanelTab === 'github'
+                    ? 'bg-claude-bg text-claude-text'
+                    : 'text-claude-text-secondary hover:text-claude-text hover:bg-claude-surface-hover'
+                }`}
+              >
+                <VscGithub className="w-3.5 h-3.5" />
+                GitHub
+              </button>
+            </div>
+
+            {/* Left Panel Content */}
             <div className="flex-1 overflow-hidden">
-              <FileExplorer onFileSelect={handleFileSelect} />
+              {leftPanelTab === 'files' ? (
+                <FileExplorer onFileSelect={handleFileSelect} />
+              ) : (
+                <GitHubExplorer onFileSelect={handleFileSelect} />
+              )}
             </div>
           </div>
         </ResizablePanel>
 
-        {/* Center Panel - Chat + Terminal */}
+        {/* Center Panel - Chat / Database / Deployments + Bottom */}
         <div className="flex-1 min-w-0 flex flex-col">
-          {/* Chat Area */}
+          {/* Center View Tab Bar */}
+          <div className="flex items-center bg-claude-surface border-b border-claude-border px-2 py-0.5 flex-shrink-0">
+            <button
+              onClick={() => setCenterView('chat')}
+              className={`flex items-center gap-1.5 px-3 py-1 text-sm rounded transition-colors ${
+                centerView === 'chat'
+                  ? 'bg-claude-bg text-claude-text'
+                  : 'text-claude-text-secondary hover:text-claude-text hover:bg-claude-surface-hover'
+              }`}
+            >
+              <VscComment className="w-4 h-4" />
+              Chat
+            </button>
+            <button
+              onClick={() => setCenterView('database')}
+              className={`flex items-center gap-1.5 px-3 py-1 text-sm rounded transition-colors ${
+                centerView === 'database'
+                  ? 'bg-claude-bg text-claude-text'
+                  : 'text-claude-text-secondary hover:text-claude-text hover:bg-claude-surface-hover'
+              }`}
+            >
+              <VscDatabase className="w-4 h-4" />
+              Database
+            </button>
+            <button
+              onClick={() => setCenterView('deployments')}
+              className={`flex items-center gap-1.5 px-3 py-1 text-sm rounded transition-colors ${
+                centerView === 'deployments'
+                  ? 'bg-claude-bg text-claude-text'
+                  : 'text-claude-text-secondary hover:text-claude-text hover:bg-claude-surface-hover'
+              }`}
+            >
+              <VscRocket className="w-4 h-4" />
+              Deployments
+            </button>
+          </div>
+
+          {/* Center Content */}
           <div className="flex-1 overflow-hidden min-h-0">
-            <Chat />
+            {centerView === 'chat' && <Chat />}
+            {centerView === 'database' && <DatabasePanel />}
+            {centerView === 'deployments' && <DeploymentsPanel />}
           </div>
 
           {/* Terminal & Ports Panel - Resizable */}

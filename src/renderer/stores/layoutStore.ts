@@ -7,6 +7,10 @@ export const PANEL_CONSTRAINTS = {
   bottom: { min: 120, max: 500, default: 250 },
 }
 
+export type CenterView = 'chat' | 'database' | 'deployments'
+export type LeftPanelTab = 'files' | 'github'
+export type BottomPanelTab = 'terminal' | 'ports' | 'activity' | 'preview'
+
 interface LayoutState {
   leftPanelWidth: number
   rightPanelWidth: number
@@ -14,6 +18,8 @@ interface LayoutState {
   isLeftPanelCollapsed: boolean
   isRightPanelCollapsed: boolean
   isBottomPanelCollapsed: boolean
+  centerView: CenterView
+  leftPanelTab: LeftPanelTab
 }
 
 interface LayoutActions {
@@ -27,6 +33,8 @@ interface LayoutActions {
   resetRightPanel: () => void
   resetBottomPanel: () => void
   resetLayout: () => void
+  setCenterView: (view: CenterView) => void
+  setLeftPanelTab: (tab: LeftPanelTab) => void
 }
 
 const DEFAULT_LAYOUT: LayoutState = {
@@ -36,6 +44,8 @@ const DEFAULT_LAYOUT: LayoutState = {
   isLeftPanelCollapsed: false,
   isRightPanelCollapsed: false,
   isBottomPanelCollapsed: false,
+  centerView: 'chat',
+  leftPanelTab: 'files',
 }
 
 export const useLayoutStore = create<LayoutState & LayoutActions>()(
@@ -56,6 +66,8 @@ export const useLayoutStore = create<LayoutState & LayoutActions>()(
       resetBottomPanel: () => set({ bottomPanelHeight: PANEL_CONSTRAINTS.bottom.default }),
 
       resetLayout: () => set(DEFAULT_LAYOUT),
+      setCenterView: (view) => set({ centerView: view }),
+      setLeftPanelTab: (tab) => set({ leftPanelTab: tab }),
     }),
     { name: 'drode-layout' }
   )

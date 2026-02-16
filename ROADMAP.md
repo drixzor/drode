@@ -184,6 +184,10 @@ Visualize token consumption across conversations:
 
 These features connect Drode to your version control workflow.
 
+### ~~GitHub Repository Browser~~ **SHIPPED**
+
+Browse GitHub repos, navigate file trees, switch branches, and edit files directly in the Monaco editor. Commit changes and create pull requests from the left panel's GitHub tab.
+
 ### Git Status in File Explorer
 
 Show git status inline in the file tree:
@@ -193,22 +197,20 @@ Show git status inline in the file tree:
 - Current branch shown in the top bar
 - Staged vs unstaged indicators
 
-### Commit from Drode
+### Commit from Drode (Local Git)
 
-After Claude makes changes, create a commit without leaving the app:
+After Claude makes changes, create a commit from the local git repo:
 
 - Select which files to stage
 - AI-generated commit message based on the changes
 - Review the diff before committing
 - Push to remote
 
-### Branch Management
+*Note: GitHub remote commits are already supported via the GitHub integration. This item covers local git operations.*
 
-Create, switch, and manage branches:
+### ~~Branch Management~~ **SHIPPED**
 
-- Create a feature branch before asking Claude to make changes
-- Switch branches and have the conversation context update
-- Compare branches side by side
+Create, switch, and manage branches via the GitHub integration panel.
 
 ### PR Description Generator
 
@@ -218,6 +220,8 @@ After a series of changes, generate a pull request description:
 - List files modified
 - Describe the rationale based on the conversation history
 - Format for GitHub/GitLab
+
+*Note: Basic PR creation is already supported via the GitHub integration. This item covers AI-assisted description generation.*
 
 ---
 
@@ -289,10 +293,12 @@ Make Drode extensible by third parties.
 
 A documented API for creating Drode plugins:
 
-- **Panel plugins:** Add custom panels (database viewer, API tester, log viewer)
+- **Panel plugins:** Add custom panels (API tester, log viewer, etc.)
 - **Chat plugins:** Custom slash commands (`/diagram`, `/sql`, `/deploy`)
 - **Theme plugins:** Custom color schemes and UI modifications
 - **Tool plugins:** New tool types that Claude can use through the permission system
+
+*Note: Built-in database viewer, deployment manager, and activity log are now shipped as first-party panels. A plugin API would enable third-party equivalents.*
 
 ### Theme Engine
 

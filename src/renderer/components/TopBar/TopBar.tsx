@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { VscFolderOpened, VscChevronDown, VscSettingsGear, VscClose, VscCircleFilled, VscShield } from 'react-icons/vsc'
+import { VscFolderOpened, VscChevronDown, VscSettingsGear, VscClose, VscCircleFilled, VscShield, VscGithub } from 'react-icons/vsc'
 import DrodeLogo from '../../assets/drode-logo.svg'
 import { useProjectStore } from '../../stores/projectStore'
 import { useConversationStore } from '../../stores/conversationStore'
+import { useAuthStore } from '../../stores/authStore'
 
 interface TopBarProps {
   onProjectChange: (projectPath: string) => void
@@ -160,6 +161,9 @@ export function TopBar({ onProjectChange, onOpenProject }: TopBarProps) {
       {/* Spacer */}
       <div className="flex-1" />
 
+      {/* Auth Status Indicators */}
+      <AuthIndicators />
+
       {/* Claude Status */}
       <div className="flex items-center gap-4 no-drag">
         <div className="flex items-center gap-2">
@@ -221,6 +225,29 @@ export function TopBar({ onProjectChange, onOpenProject }: TopBarProps) {
           <VscSettingsGear className="text-claude-text-secondary" />
         </button>
       </div>
+    </div>
+  )
+}
+
+function AuthIndicators() {
+  const github = useAuthStore((s) => s.github)
+  const supabase = useAuthStore((s) => s.supabase)
+  const vercel = useAuthStore((s) => s.vercel)
+
+  return (
+    <div className="flex items-center gap-1.5 mr-3 no-drag">
+      <div
+        className={`w-2 h-2 rounded-full ${github.connected ? 'bg-claude-success' : 'bg-claude-text-secondary/30'}`}
+        title={`GitHub: ${github.connected ? github.username || 'Connected' : 'Not connected'}`}
+      />
+      <div
+        className={`w-2 h-2 rounded-full ${supabase.connected ? 'bg-claude-success' : 'bg-claude-text-secondary/30'}`}
+        title={`Supabase: ${supabase.connected ? 'Connected' : 'Not connected'}`}
+      />
+      <div
+        className={`w-2 h-2 rounded-full ${vercel.connected ? 'bg-claude-success' : 'bg-claude-text-secondary/30'}`}
+        title={`Vercel: ${vercel.connected ? vercel.username || 'Connected' : 'Not connected'}`}
+      />
     </div>
   )
 }

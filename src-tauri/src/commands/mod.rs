@@ -4,3 +4,8 @@ pub mod claude;
 pub mod conversations;
 pub mod terminal;
 pub mod ports;
+pub mod activity;
+pub mod oauth;
+pub mod github;
+pub mod supabase;
+pub mod vercel;

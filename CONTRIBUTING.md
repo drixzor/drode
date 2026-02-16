@@ -46,14 +46,31 @@ The frontend calls the backend through Tauri's `invoke()` IPC. The backend emits
 ```
 src/renderer/
 ├── components/    # React components, grouped by feature
-├── hooks/         # Custom hooks for state management
-├── services/      # Claude CLI bridge, Tauri API wrapper
+│   ├── Chat/             # Chat with Claude
+│   ├── CodeEditor/       # Monaco editor
+│   ├── FileExplorer/     # Local file tree
+│   ├── GitHub/           # GitHub repo browser, commit/PR dialogs
+│   ├── Database/         # Supabase table viewer, SQL editor
+│   ├── Deployments/      # Vercel deployment management
+│   ├── ActivityLog/      # Cross-feature event timeline
+│   ├── Preview/          # Localhost iframe preview
+│   ├── Terminal/         # Terminal, ports panel
+│   └── ...               # TopBar, StatusBar, Permissions, etc.
+├── stores/        # Zustand state management (12 stores)
+├── services/      # Claude CLI bridge, Tauri API wrapper, activity bus
 ├── types/         # Shared TypeScript interfaces
 ├── utils/         # Helper functions
 └── styles/        # Global CSS + Tailwind
 
 src-tauri/src/
-└── lib.rs         # All backend logic (IPC handlers, file ops, CLI bridge)
+├── commands/      # Modular IPC command handlers (11 modules)
+│   ├── projects, files, claude, conversations, terminal, ports
+│   └── activity, oauth, github, supabase, vercel
+├── db/            # SQLite persistence (7 modules)
+│   ├── schema, settings, projects, conversations, search
+│   └── activity, oauth
+├── state.rs       # AppState with SQLite connection
+└── lib.rs         # App setup & invoke handler registration
 ```
 
 ## How to Contribute
@@ -124,10 +141,13 @@ No specific format is enforced, but keep the first line under 72 characters and 
 ## Architecture Decisions
 
 - **Tauri over Electron**: Smaller binary, lower memory usage, Rust safety
-- **Custom hooks over state library**: Keeps state management simple and co-located
+- **Zustand for state**: 12 stores, zero prop drilling, `persist` middleware for layout, `subscribeWithSelector` for cross-store reactivity
 - **Claude CLI --print mode**: Avoids TTY requirements; each message spawns a new process with `--resume` for session continuity
 - **Stream-JSON parsing**: Claude's `--output-format stream-json` gives structured output that can be parsed into tool executions, text content, and metadata
-- **File-based persistence**: Config stored as JSON in the OS app data directory; no database dependency
+- **SQLite persistence**: WAL-mode database with schema versioning, FTS5 search, and cascade deletes. Replaced the original JSON file store in Phase 2.
+- **External APIs via Rust**: All GitHub, Supabase, and Vercel API calls go through Rust (`reqwest`), keeping OAuth tokens on the native side. The webview never handles access tokens directly.
+- **OAuth2 PKCE**: System browser opens the provider's auth page. A `tiny_http` server on `localhost:17391` receives the callback. No client secret is exposed to the frontend.
+- **Activity bus pattern**: All integrations call `logActivity()` which persists events to SQLite and broadcasts them via Tauri events. The activity log UI subscribes to these events for real-time updates.
 
 ## Need Help?
 

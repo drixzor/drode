@@ -32,6 +32,14 @@ chrono = "0.4"
 trash = "4"
 uuid = { version = "1", features = ["v4"] }
 rusqlite = { version = "0.31", features = ["bundled", "backup"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+tiny_http = "0.12"
+rand = "0.8"
+base64 = "0.22"
+sha2 = "0.10"
+urlencoding = "2"
+open = "5"
+lazy_static = "1.4"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

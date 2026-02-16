@@ -6,11 +6,15 @@ import {
   VscChevronUp,
   VscChevronDown,
   VscDebugStop,
-  VscServerProcess
+  VscServerProcess,
+  VscPulse,
+  VscBrowser,
 } from 'react-icons/vsc'
 import { v4 as uuidv4 } from 'uuid'
 import { TerminalOutput } from '../../types'
 import { PortsPanel } from './PortsPanel'
+import { ActivityLog } from '../ActivityLog/ActivityLog'
+import { PreviewPanel } from '../Preview/PreviewPanel'
 
 interface TerminalLine {
   id: string
@@ -19,7 +23,7 @@ interface TerminalLine {
   timestamp: number
 }
 
-type BottomPanelTab = 'terminal' | 'ports'
+type BottomPanelTab = 'terminal' | 'ports' | 'activity' | 'preview'
 
 interface BottomPanelProps {
   projectPath: string | null
@@ -240,6 +244,23 @@ export const BottomPanel = memo(forwardRef<BottomPanelHandle, BottomPanelProps>(
     )
   }
 
+  const tabButton = (tab: BottomPanelTab, icon: React.ReactNode, label: string) => (
+    <button
+      onClick={() => setActiveTab(tab)}
+      className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition-colors ${
+        activeTab === tab
+          ? 'bg-claude-bg text-claude-text'
+          : 'text-claude-text-secondary hover:text-claude-text hover:bg-claude-surface-hover'
+      }`}
+    >
+      {icon}
+      <span>{label}</span>
+      {tab === 'terminal' && isRunning && (
+        <span className="w-2 h-2 rounded-full bg-claude-success animate-pulse" />
+      )}
+    </button>
+  )
+
   return (
     <div
       ref={panelRef}
@@ -262,32 +283,10 @@ export const BottomPanel = memo(forwardRef<BottomPanelHandle, BottomPanelProps>(
       {/* Tab Header */}
       <div className="h-9 bg-claude-surface border-b border-claude-border flex items-center justify-between px-2 flex-shrink-0">
         <div className="flex items-center">
-          {/* Tabs */}
-          <button
-            onClick={() => setActiveTab('terminal')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition-colors ${
-              activeTab === 'terminal'
-                ? 'bg-claude-bg text-claude-text'
-                : 'text-claude-text-secondary hover:text-claude-text hover:bg-claude-surface-hover'
-            }`}
-          >
-            <VscTerminal className="w-4 h-4" />
-            <span>Terminal</span>
-            {isRunning && (
-              <span className="w-2 h-2 rounded-full bg-claude-success animate-pulse" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('ports')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition-colors ${
-              activeTab === 'ports'
-                ? 'bg-claude-bg text-claude-text'
-                : 'text-claude-text-secondary hover:text-claude-text hover:bg-claude-surface-hover'
-            }`}
-          >
-            <VscServerProcess className="w-4 h-4" />
-            <span>Ports</span>
-          </button>
+          {tabButton('terminal', <VscTerminal className="w-4 h-4" />, 'Terminal')}
+          {tabButton('ports', <VscServerProcess className="w-4 h-4" />, 'Ports')}
+          {tabButton('activity', <VscPulse className="w-4 h-4" />, 'Activity')}
+          {tabButton('preview', <VscBrowser className="w-4 h-4" />, 'Preview')}
         </div>
 
         <div className="flex items-center gap-1">
@@ -376,9 +375,13 @@ export const BottomPanel = memo(forwardRef<BottomPanelHandle, BottomPanelProps>(
             </button>
           </div>
         </>
-      ) : (
-        <PortsPanel isVisible={activeTab === 'ports'} />
-      )}
+      ) : activeTab === 'ports' ? (
+        <PortsPanel isVisible={true} />
+      ) : activeTab === 'activity' ? (
+        <ActivityLog />
+      ) : activeTab === 'preview' ? (
+        <PreviewPanel />
+      ) : null}
     </div>
   )
 }))
